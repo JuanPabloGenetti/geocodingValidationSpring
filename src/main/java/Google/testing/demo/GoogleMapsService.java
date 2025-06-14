@@ -5,7 +5,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.text.Normalizer;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -20,8 +19,7 @@ public class GoogleMapsService {
     private final RestTemplate restTemplate = new RestTemplate();
 
     public boolean validarDireccionEnMarDelPlata(String direccion) {
-        // Usamos la dirección "cruda", sin agregar ", Mar del Plata"
-        String url = "https://maps.googleapis.com/maps/api/geocode/json?address={address}&region=ar&key={key}";
+        String url = "https://maps.googleapis.com/maps/api/geocode/json?address={address},+Mar+del+Plata&key={key}";
 
         Map<String, String> params = new HashMap<>();
         params.put("address", direccion);
@@ -36,10 +34,11 @@ public class GoogleMapsService {
         Map<String, Object> result = results.get(0);
         String formattedAddress = (String) result.get("formatted_address");
 
-        // Normalizar ambas direcciones para hacer comparación sin tildes ni espacios
-        String direccionNormalizada = normalizarTexto(direccion);
-        String formattedNormalizada = normalizarTexto(formattedAddress);
+        // Normalizar para comparar sin espacios ni mayúsculas
+        String direccionNormalizada = direccion.toLowerCase().replaceAll("\\s+", "");
+        String formattedNormalizada = formattedAddress.toLowerCase().replaceAll("\\s+", "");
 
+        // Verifica que aparezca la calle+altura exacta en la dirección devuelta
         if (!formattedNormalizada.contains(direccionNormalizada)) {
             return false;
         }
@@ -50,19 +49,12 @@ public class GoogleMapsService {
         double lat = ((Number) location.get("lat")).doubleValue();
         double lng = ((Number) location.get("lng")).doubleValue();
 
-        // Rango aproximado de coordenadas de Mar del Plata
+        // Coordenadas aproximadas de Mar del Plata
         double latMin = -38.100;
         double latMax = -37.850;
         double lngMin = -57.700;
         double lngMax = -57.450;
 
         return lat >= latMin && lat <= latMax && lng >= lngMin && lng <= lngMax;
-    }
-
-    private String normalizarTexto(String texto) {
-        return Normalizer.normalize(texto, Normalizer.Form.NFD)
-                .replaceAll("[^\\p{ASCII}]", "")  // quita tildes
-                .toLowerCase()
-                .replaceAll("\\s+", "");          // elimina espacios
     }
 }
