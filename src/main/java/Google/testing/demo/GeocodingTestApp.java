@@ -17,7 +17,7 @@ public class GeocodingTestApp implements CommandLineRunner {
 
     @Override
     public void run(String... args) {
-        String direccion = "Hipólito Yrigoyen"; // Atento a los acentos
+        String direccion = "Plaza Skate"; // Atento a los acentos
         boolean valida = googleMapsService.validarDireccionEnMarDelPlata(direccion);
         System.out.println("¿Es válida en Mar del Plata? " + valida);
     }
